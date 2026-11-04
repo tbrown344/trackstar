@@ -232,6 +232,18 @@ nav button.active{color:var(--text);background:rgba(110,168,255,.14)}
         <input type="date" id="cycleStart" onchange="setCycleStart(this.value)">
         <div class="hint">Cycles are 90-day blocks from this date. Contacts count toward the cycle they were added in.</div>
       </div>
+      <div id="weekStartRow" style="display:none">
+        <label>Weeks start on</label>
+        <select id="weekStart" onchange="setWeekStart(this.value)">
+          <option value="0">Sunday</option>
+          <option value="1">Monday</option>
+          <option value="2">Tuesday</option>
+          <option value="3">Wednesday</option>
+          <option value="4">Thursday</option>
+          <option value="5">Friday</option>
+          <option value="6">Saturday</option>
+        </select>
+      </div>
     </div>
 
     <div class="grid" id="kpis"></div>
@@ -360,7 +372,7 @@ nav button.active{color:var(--text);background:rgba(110,168,255,.14)}
       <div class="hint" id="backupInfo"></div>
       <div class="hint">Backups are plain-text files (JSON). Anyone you send a backup to will see your contacts, so only share it on purpose.</div>
     </div>
-    <div class="hint" style="text-align:center;margin-top:18px">Trackstar v9 · Your data stays on this device</div>
+    <div class="hint" style="text-align:center;margin-top:18px">Trackstar v10 · Your data stays on this device</div>
   </section>
 
   <!-- DAILY MESSAGE -->
@@ -729,7 +741,8 @@ function setCycleStart(v){
 // off = how many periods back from the current one (0 = current)
 function weekStart(s){
   const d = new Date(s+"T00:00");
-  d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); // weeks start Monday
+  const start = db.weekStartDay ?? 1; // 0 = Sunday ... 6 = Saturday, default Monday
+  d.setDate(d.getDate() - ((d.getDay() - start + 7) % 7));
   return ymd(d);
 }
 function rangeFor(mode, off){
@@ -766,6 +779,7 @@ function stepPeriod(d){
   dash.off = next; renderDash();
 }
 function setDashMode(m){ dash.mode = m; dash.off = 0; renderDash(); }
+function setWeekStart(v){ db.weekStartDay = parseInt(v, 10); save(); toast("Weeks updated"); renderDash(); }
 function jumpPeriod(off){ dash.off = off; renderDash(); window.scrollTo({top:0,behavior:"smooth"}); }
 function toggleRecap(){ dash.recap = !dash.recap; renderDash(); }
 function dismissRecap(){ db.recapDismissed = todayStr(); dash.recap = false; save(); renderDash(); }
@@ -969,6 +983,8 @@ function renderDash(){
     document.getElementById("periodPrev").disabled = (mode === "cycle" && currentCycle() + dash.off <= 1);
     document.getElementById("periodNext").disabled = dash.off >= 0;
     if(mode === "cycle") document.getElementById("cycleStart").value = cycleStart();
+    document.getElementById("weekStartRow").style.display = mode === "week" ? "" : "none";
+    document.getElementById("weekStart").value = db.weekStartDay ?? 1;
   }
 
   // headline tiles
