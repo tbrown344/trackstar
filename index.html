@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Trackstar">
+<meta name="theme-color" content="#0b1020">
+<link rel="icon" id="favicon" href="">
+<link rel="apple-touch-icon" id="appleIcon" href="">
+<title>Trackstar</title>
+<style>
+:root{
+  --bg:#0b1020;--panel:#131a2e;--panel2:#1a2340;--line:#243056;
+  --text:#e6ebf7;--muted:#8a96b8;--accent:#6ea8ff;--accent2:#a78bfa;
+  --good:#34d399;--warn:#fbbf24;--bad:#f87171;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+  background:radial-gradient(1000px 500px at 10% -10%,#1d2d5c 0,transparent 60%),
+             radial-gradient(800px 400px at 110% 10%,#2a1d5c 0,transparent 55%),var(--bg);
+  background-attachment:fixed}
+body{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+header{position:sticky;top:0;z-index:5;padding:calc(12px + env(safe-area-inset-top)) 18px 12px;
+  background:rgba(11,16,32,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:40px;height:40px;flex:none;border-radius:12px;padding:5px;
+  background:linear-gradient(135deg,#1d2d5c,#2a1d5c);border:1px solid var(--line);box-shadow:0 4px 14px rgba(110,168,255,.2)}
+.app{font-size:10.5px;letter-spacing:2.2px;color:var(--accent);font-weight:700}
+h1{margin:0;font-size:20px;font-weight:700;letter-spacing:.2px}
+h2{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--text)}
+.sub{color:var(--muted);font-size:13px;margin-top:8px}
+main{padding:16px;max-width:720px;margin:0 auto}
+.view{display:none}.view.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);
+  border-radius:16px;padding:14px;box-shadow:0 8px 28px rgba(0,0,0,.28);margin-bottom:12px}
+.kpi .n{font-size:28px;font-weight:700;line-height:1.1}
+.kpi .l{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.7px;margin-top:4px}
+.kpi.good .n{color:var(--good)} .kpi.warn .n{color:var(--warn)} .kpi.acc .n{color:var(--accent)}
+.banner{display:flex;justify-content:space-between;align-items:center;gap:10px;
+  background:linear-gradient(90deg,rgba(251,191,36,.18),rgba(251,191,36,.06));
+  border:1px solid rgba(251,191,36,.45);color:#fde68a;border-radius:14px;padding:12px 14px;margin-bottom:12px;
+  font-size:14px;cursor:pointer}
+.banner.info{background:linear-gradient(90deg,rgba(110,168,255,.18),rgba(110,168,255,.06));
+  border-color:rgba(110,168,255,.45);color:#cfe1ff}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:#0b1229;border:1px solid var(--line);
+  border-radius:14px;padding:4px;margin-bottom:12px}
+.seg button{background:transparent;box-shadow:none;color:var(--muted);padding:9px 8px;border-radius:10px;font-size:13.5px}
+.seg button.on{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 4px 14px rgba(110,168,255,.25)}
+.cycnav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cycnav button:disabled{opacity:.35;cursor:default}
+.funnel-row{display:grid;grid-template-columns:86px 1fr 46px 62px;align-items:center;gap:10px;margin:9px 0}
+.funnel-label{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{height:26px;border-radius:9px;background:#0e1530;border:1px solid var(--line);overflow:hidden}
+.fill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--accent),var(--accent2));
+  transition:width .6s cubic-bezier(.2,.8,.2,1);min-width:0}
+.fill.over{background:linear-gradient(90deg,#10b981,#34d399)}
+.count{font-weight:700;font-size:14px;text-align:right}
+.chip{font-size:12px;font-weight:600;text-align:center;border-radius:999px;padding:3px 0;line-height:1.2;
+  background:rgba(110,168,255,.12);color:var(--accent);border:1px solid rgba(110,168,255,.3)}
+.chip small{display:block;font-size:9.5px;font-weight:500;opacity:.8}
+.chip.good{background:rgba(52,211,153,.12);color:var(--good);border-color:rgba(52,211,153,.35)}
+.chip.bad{background:rgba(248,113,113,.12);color:var(--bad);border-color:rgba(248,113,113,.35)}
+.chip.na{color:var(--muted);background:transparent;border-color:var(--line)}
+.goalrow{display:grid;grid-template-columns:86px 1fr 70px;align-items:center;gap:10px;margin:9px 0}
+.tt{display:grid;grid-template-columns:128px 1fr 56px;align-items:center;gap:10px;margin:9px 0}
+.tt .funnel-label{white-space:normal;font-size:12.5px}
+.tt.slow .funnel-label{color:#fde68a;font-weight:600}
+.tt small{display:block;color:var(--muted);font-size:10.5px;text-align:right}
+.callout{font-size:14px;line-height:1.45;color:var(--muted)}
+.callout b{color:var(--text)}
+.cmp{display:grid;grid-template-columns:118px 1fr 52px;gap:10px;align-items:center;margin:10px 0;
+  font-size:13px;cursor:pointer;padding:6px;border-radius:12px}
+.cmp:hover{background:rgba(110,168,255,.06)}
+.cmp.cur .lbl{color:var(--text);font-weight:650}
+.cmp .lbl{color:var(--muted)}
+.cmp .lbl small{display:block;font-size:11px;color:var(--muted);opacity:.85}
+.cmp .val{text-align:right;font-weight:700}
+.recap{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.fact{background:#0b1229;border:1px solid var(--line);border-radius:10px;padding:8px;min-width:0}
+.fact .k{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.fact .v{font-size:17px;font-weight:700;margin-top:2px}
+.fact .s{font-size:11px;color:var(--muted);margin-top:1px}
+.item{border:1px solid var(--line);background:#0e1530;border-radius:14px;padding:12px;margin-bottom:10px}
+.item-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.name{font-weight:650;font-size:15px}
+.meta{color:var(--muted);font-size:12.5px;margin-top:2px}
+.pill{font-size:11.5px;padding:3px 9px;border-radius:999px;background:rgba(167,139,250,.14);
+  color:#c4b5fd;border:1px solid rgba(167,139,250,.35);white-space:nowrap}
+.pill.warn{background:rgba(251,191,36,.12);color:#fde68a;border-color:rgba(251,191,36,.4)}
+.pill.bad{background:rgba(248,113,113,.12);color:#fecaca;border-color:rgba(248,113,113,.4)}
+.pill.good{background:rgba(52,211,153,.12);color:#a7f3d0;border-color:rgba(52,211,153,.4)}
+input,select,textarea{width:100%;background:#0b1229;color:var(--text);border:1px solid var(--line);
+  border-radius:12px;padding:11px 12px;font-size:16px;font-family:inherit;outline:none;margin-top:4px}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(110,168,255,.18)}
+textarea{min-height:70px;resize:vertical}
+label{display:block;font-size:12px;color:var(--muted);margin:10px 0 0;letter-spacing:.3px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.gg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.gg label{margin-top:8px}
+.gg input{padding:9px 10px;font-size:15px}
+details{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:14px}
+button{font:inherit;cursor:pointer;border:0;border-radius:12px;padding:11px 14px;font-size:14px;font-weight:600;
+  color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 4px 14px rgba(110,168,255,.25)}
+button.ghost{background:#0e1530;color:var(--text);border:1px solid var(--line);box-shadow:none}
+button.danger{background:transparent;color:var(--bad);border:1px solid rgba(248,113,113,.45);box-shadow:none}
+button.small{padding:7px 11px;font-size:12.5px;border-radius:10px}
+button.good{background:linear-gradient(135deg,#10b981,#34d399);box-shadow:0 4px 14px rgba(52,211,153,.22)}
+button:disabled{opacity:.35;cursor:default}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.btns button{flex:1 1 auto}
+.notes{margin-top:10px;border-left:2px solid var(--line);padding-left:12px}
+.note{margin:8px 0;font-size:13.5px;line-height:1.4}
+.note .d{color:var(--muted);font-size:11.5px;margin-bottom:2px}
+.empty{color:var(--muted);font-size:14px;text-align:center;padding:18px 6px}
+.hint{color:var(--muted);font-size:12px;margin-top:8px;line-height:1.4}
+.tk{display:grid;grid-template-columns:repeat(9,1fr);gap:3px;margin-top:12px}
+.tk span{height:6px;border-radius:3px;background:#0e1530;border:1px solid var(--line)}
+.tk span.on{background:linear-gradient(90deg,var(--accent),var(--accent2));border-color:transparent}
+.tk span.cur{box-shadow:0 0 0 2px var(--warn)}
+.facts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.facts .fact .v{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.count-line{font-size:12px;color:var(--muted);margin:2px 0 10px}
+.search{margin:0 0 10px}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:10;display:flex;justify-content:space-around;
+  padding:8px 6px calc(10px + env(safe-area-inset-bottom));
+  background:rgba(11,16,32,.85);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-top:1px solid var(--line)}
+nav button{flex:1;background:transparent;box-shadow:none;color:var(--muted);font-size:11.5px;font-weight:600;
+  padding:6px 2px;border-radius:12px;display:flex;flex-direction:column;align-items:center;gap:3px}
+nav button .ic{font-size:18px;line-height:1}
+nav button.active{color:var(--text);background:rgba(110,168,255,.14)}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);
+  background:#1f2a52;border:1px solid var(--line);padding:10px 16px;border-radius:12px;font-size:14px;
+  opacity:0;transition:.25s;pointer-events:none;z-index:20;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:420px){
+  .grid{grid-template-columns:1fr 1fr}
+  .funnel-row{grid-template-columns:76px 1fr 40px 56px}
+  .cmp{grid-template-columns:96px 1fr 46px}
+  .recap{grid-template-columns:1fr 1fr}
+  .facts{grid-template-columns:1fr 1fr}
+  .gg{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 64 64" aria-hidden="true">
+      <defs>
+        <linearGradient id="tsg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#6ea8ff"/><stop offset="1" stop-color="#a78bfa"/>
+        </linearGradient>
+      </defs>
+      <path d="M6 42 L6 30 Q6 26 10 25 L21 23 Q25 22 27 18 Q28 15 31 15 Q34 15 35 18 L37 23 Q44 26 49 28 Q56 30 58 36 L58 42 Q58 46 54 46 L10 46 Q6 46 6 42 Z" fill="url(#tsg)"/>
+      <path d="M4 46 L60 46 L60 50 Q60 53 57 53 L7 53 Q4 53 4 50 Z" fill="#e6ebf7"/>
+      <path d="M24 27 Q34 31 44 36" stroke="#0b1020" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <div class="app">TRACKSTAR</div>
+      <h1 id="title">Dashboard</h1>
+    </div>
+  </div>
+  <div class="sub" id="subtitle"></div>
+</header>
+
+<main>
+  <!-- DASHBOARD -->
+  <section class="view active" id="view-dash">
+    <div class="seg">
+      <button data-mode="all" class="on" onclick="setDashMode('all')">All time</button>
+      <button data-mode="cycle" onclick="setDashMode('cycle')">90-day cycles</button>
+    </div>
+
+    <div id="dueBanner"></div>
+    <div id="backupBanner"></div>
+
+    <div class="btns" style="margin:0 0 12px">
+      <button class="ghost small" onclick="toggleRecap()">📋 Weekly recap</button>
+    </div>
+    <div class="card" id="recapCard" style="display:none"></div>
+
+    <div class="card" id="cycleNav" style="display:none">
+      <div class="cycnav">
+        <button class="ghost small" id="cycPrev" onclick="stepCycle(-1)">‹ Prev</button>
+        <div style="text-align:center;min-width:0">
+          <div class="name" id="cycleTitle"></div>
+          <div class="meta" id="cycleDates"></div>
+        </div>
+        <button class="ghost small" id="cycNext" onclick="stepCycle(1)">Next ›</button>
+      </div>
+      <div class="row2" style="margin-top:10px;align-items:end">
+        <div>
+          <label>Cycle 1 starts</label>
+          <input type="date" id="cycleStart" onchange="setCycleStart(this.value)">
+        </div>
+        <div class="hint" style="margin-top:0">Cycles are 90-day blocks from this date. Contacts are placed in a cycle by the date they were added.</div>
+      </div>
+    </div>
+
+    <div class="grid" id="kpis"></div>
+
+    <div class="card" style="margin-top:12px">
+      <h2 id="goalTitle">Goals</h2>
+      <div id="goalRows"></div>
+      <details>
+        <summary>Edit goals</summary>
+        <label>Contacts reached per cycle (cumulative)</label>
+        <div class="gg" id="goalInputs"></div>
+        <label>Conversion targets (% moving to the next stage)</label>
+        <div class="gg" id="targetInputs"></div>
+        <div class="btns"><button class="small" onclick="saveGoals()">Save goals</button></div>
+        <div class="hint">These are starting guesses. Set them to your real numbers. Goals track the current cycle; conversion targets apply everywhere.</div>
+      </details>
+    </div>
+
+    <div class="card">
+      <h2 id="funnelTitle">Pipeline funnel</h2>
+      <div id="funnel"></div>
+      <div class="hint">Each bar counts contacts that reached that stage or a later one. Chips are green when the conversion meets its target and red when it falls short.</div>
+    </div>
+
+    <div class="card">
+      <h2>Time per stage</h2>
+      <div id="timeRows"></div>
+      <div class="hint">Average days contacts spent getting from one stage to the next, based on dates recorded from now on. The slowest step is highlighted.</div>
+    </div>
+
+    <div class="card">
+      <h2>Insights</h2>
+      <div class="callout" id="insights"></div>
+    </div>
+
+    <div class="card" id="cmpCard" style="display:none">
+      <h2>Cycle comparison</h2>
+      <div class="hint" style="margin:0 0 4px">Convo → Launch rate for each cycle. Tap a cycle to open it. Newer cycles have had less time to move, so their rates will tend to be lower.</div>
+      <div id="cmpList"></div>
+    </div>
+
+    <div class="card">
+      <h2>Recent activity</h2>
+      <div id="activity"></div>
+    </div>
+  </section>
+
+  <!-- ADD -->
+  <section class="view" id="view-add">
+    <div class="card">
+      <h2>Add contact</h2>
+      <form onsubmit="addContact(event)">
+        <label>Name *</label>
+        <input id="f-name" required placeholder="Full name">
+        <div class="row2">
+          <div><label>Company</label><input id="f-company" placeholder="Company"></div>
+          <div><label>Phone</label><input id="f-phone" type="tel" placeholder="Phone"></div>
+        </div>
+        <div class="row2">
+          <div><label>Email</label><input id="f-email" type="email" placeholder="Email"></div>
+          <div><label>Date added</label><input id="f-added" type="date"></div>
+        </div>
+        <label>Stage</label>
+        <select id="f-stage"></select>
+        <label>Initial note</label>
+        <textarea id="f-note" placeholder="How you met, what they care about, etc."></textarea>
+        <div class="btns"><button type="submit">Add contact</button></div>
+      </form>
+    </div>
+  </section>
+
+  <!-- CONTACTS -->
+  <section class="view" id="view-contacts">
+    <div class="card" style="padding-bottom:12px">
+      <input class="search" id="search" placeholder="Search name, company, notes" oninput="renderContacts()">
+      <div class="row3">
+        <div><label style="margin-top:0">Current stage</label>
+          <select id="fStage" onchange="renderContacts()"></select></div>
+        <div><label style="margin-top:0">Sort by</label>
+          <select id="fSort" onchange="renderContacts()">
+            <option value="recent">Last contacted (newest)</option>
+            <option value="stale">Longest since contact</option>
+            <option value="furthest">Furthest in pipeline</option>
+            <option value="added">Date added (newest)</option>
+            <option value="name">Name (A–Z)</option>
+          </select></div>
+      </div>
+      <div class="btns" style="margin-top:12px">
+        <button class="ghost small" onclick="exportCSV()">Export CSV</button>
+      </div>
+    </div>
+    <div class="count-line" id="contactCount"></div>
+    <div id="contactList"></div>
+  </section>
+
+  <!-- REMINDERS -->
+  <section class="view" id="view-reminders">
+    <div class="card">
+      <h2>Reminder settings</h2>
+      <label>Remind me after this many days without contact</label>
+      <input id="interval" type="number" min="1" max="365" style="max-width:160px" onchange="setInterval_()">
+      <div class="hint">Contacts already at Launch are left out of reminders.</div>
+    </div>
+    <div class="card">
+      <h2>Due now</h2>
+      <div id="dueList"></div>
+    </div>
+    <div class="card">
+      <h2>Coming up in the next 14 days</h2>
+      <div id="soonList"></div>
+    </div>
+    <div class="card">
+      <h2>Backup</h2>
+      <div class="btns" style="margin-top:0">
+        <button onclick="exportData()">Save backup to Files</button>
+        <button class="ghost" onclick="document.getElementById('importFile').click()">Import backup</button>
+        <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importData(event)">
+      </div>
+      <div class="hint" id="backupInfo"></div>
+      <div class="hint">Save backups to iCloud Drive if you want copies on other devices. Anyone you send a backup file to will see your contacts, so only share it on purpose.</div>
+    </div>
+  </section>
+</main>
+
+<nav>
+  <button class="active" data-view="dash" onclick="show('dash')"><span class="ic">◐</span>Dashboard</button>
+  <button data-view="add" onclick="show('add')"><span class="ic">＋</span>Add</button>
+  <button data-view="contacts" onclick="show('contacts')"><span class="ic">☰</span>Contacts</button>
+  <button data-view="reminders" onclick="show('reminders')"><span class="ic">⏰</span>Reminders</button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script>
+const STAGES = ["Convo","Contact","MG1 Booked","MG1 Shown","GE1","FU1","GE2","FU2","Launch"];
+const LAST = STAGES.length - 1;
+const KEY = "pipeline_tracker_v1"; // same key as before, so existing data carries over
+const CYCLE_DAYS = 90;
+const DEFAULT_TARGETS = [40,40,50,60,40,40,40,40]; // conversion % for each step
+const DEFAULT_GOALS = [50,30,15,10,8,6,4,3,2];     // contacts reached per cycle, by stage
+const TITLES = {
+  dash:["Dashboard","Your pipeline at a glance"],
+  add:["Add contact","Log someone new"],
+  contacts:["Contacts","Everyone you're working, and how far they've gone"],
+  reminders:["Reminders","Time to reach back out"]
+};
+const SHOE = "M6 42 L6 30 Q6 26 10 25 L21 23 Q25 22 27 18 Q28 15 31 15 Q34 15 35 18 L37 23 Q44 26 49 28 Q56 30 58 36 L58 42 Q58 46 54 46 L10 46 Q6 46 6 42 Z";
+const SOLE = "M4 46 L60 46 L60 50 Q60 53 57 53 L7 53 Q4 53 4 50 Z";
+let expandedId = null;
+let dash = {mode:"all", cycle:null, recap:false};
+
+/* ---------- storage ---------- */
+function normalize(c){
+  c.notes = (c.notes || []).map(n => ({type:"note", ...n}));
+  c.history = c.history || [];
+  if(c.maxStage === undefined){ c.maxStage = c.stage; c.maxStageDate = c.lastContact || c.added; }
+  return c;
+}
+function withDefaults(d){
+  d.contacts = (d.contacts || []).map(normalize);
+  d.interval = d.interval || 90;
+  d.targets = (Array.isArray(d.targets) && d.targets.length === 8) ? d.targets : DEFAULT_TARGETS.slice();
+  d.goals = (Array.isArray(d.goals) && d.goals.length === 9) ? d.goals : DEFAULT_GOALS.slice();
+  d.lastBackup = d.lastBackup || null;
+  d.recapDismissed = d.recapDismissed || null;
+  return d;
+}
+function load(){
+  try{
+    const d = JSON.parse(localStorage.getItem(KEY));
+    if(d && Array.isArray(d.contacts)) return withDefaults(d);
+  }catch(e){}
+  return withDefaults({contacts:[]});
+}
+let db = load();
+const onSheet = () => !!(window.google && google.script && google.script.run);
+function save(){
+  const json = JSON.stringify(db);
+  try{ localStorage.setItem(KEY, json); }
+  catch(e){ toast("Storage full or blocked. Save a backup."); }
+  if(onSheet()){
+    google.script.run
+      .withSuccessHandler(res => { if(res === "stale") toast("Newer change already saved"); })
+      .withFailureHandler(() => toast("Couldn't reach your sheet. Saved on this phone only."))
+      .saveData(json, Date.now());
+  }
+}
+function startFromSheet(){
+  const finish = () => { initForm(); initGoalForm(); makeIcon(); show("dash"); };
+  if(!onSheet()){ finish(); return; }
+  google.script.run
+    .withSuccessHandler(json => {
+      if(json){ db = withDefaults(JSON.parse(json)); }
+      try{ localStorage.setItem(KEY, JSON.stringify(db)); }catch(e){}
+      finish();
+      toast("Loaded from your sheet");
+    })
+    .withFailureHandler(() => { finish(); toast("Sheet unavailable. Using this phone's copy."); })
+    .loadData();
+}
+
+/* ---------- helpers ---------- */
+const pad = n => String(n).padStart(2,"0");
+const todayStr = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+const daysBetween = (a,b) => Math.round((new Date(b+"T00:00") - new Date(a+"T00:00")) / 86400000);
+const daysSince = s => s ? daysBetween(s, todayStr()) : 0;
+const addDays = (s,n) => { const d=new Date(s+"T00:00"); d.setDate(d.getDate()+n); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+const fmtDate = s => s ? new Date(s+"T00:00").toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}) : "—";
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("show"), 1800);
+}
+function download(blob, name){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+function isDue(c){ return c.stage < LAST && daysSince(c.lastContact) >= db.interval; }
+function isSoon(c){
+  if(c.stage >= LAST) return false;
+  const d = daysSince(c.lastContact);
+  return d >= db.interval - 14 && d < db.interval;
+}
+
+/* ---------- logo / app icon ---------- */
+function makeIcon(){
+  try{
+    const size = 180, s = 2.2, cv = document.createElement("canvas");
+    cv.width = cv.height = size;
+    const ctx = cv.getContext("2d");
+    const bg = ctx.createLinearGradient(0,0,size,size);
+    bg.addColorStop(0,"#1d2d5c"); bg.addColorStop(1,"#2a1d5c");
+    ctx.fillStyle = bg; ctx.fillRect(0,0,size,size);
+    const off = (size - 64*s)/2;
+    ctx.setTransform(s,0,0,s,off,off);
+    const g = ctx.createLinearGradient(0,15,64,46);
+    g.addColorStop(0,"#6ea8ff"); g.addColorStop(1,"#a78bfa");
+    ctx.fillStyle = g; ctx.fill(new Path2D(SHOE));
+    ctx.fillStyle = "#e6ebf7"; ctx.fill(new Path2D(SOLE));
+    ctx.strokeStyle = "#0b1020"; ctx.lineWidth = 2.5; ctx.lineCap = "round";
+    ctx.stroke(new Path2D("M24 27 Q34 31 44 36"));
+    const url = cv.toDataURL("image/png");
+    document.getElementById("appleIcon").href = url;
+    document.getElementById("favicon").href = url;
+  }catch(e){}
+}
+
+/* ---------- 90-day cycles ---------- */
+function cycleStart(){
+  if(!db.cycleStart){
+    const dates = db.contacts.map(c=>c.added).filter(Boolean).sort();
+    db.cycleStart = dates[0] || todayStr();
+    save();
+  }
+  return db.cycleStart;
+}
+function cycleOf(c){
+  const n = Math.floor(daysBetween(cycleStart(), c.added || todayStr()) / CYCLE_DAYS) + 1;
+  return Math.max(1, n);
+}
+function cycleRange(n){
+  const s = addDays(cycleStart(), (n-1)*CYCLE_DAYS);
+  return [s, addDays(s, CYCLE_DAYS-1)];
+}
+function currentCycle(){
+  return Math.max(1, Math.floor(daysBetween(cycleStart(), todayStr()) / CYCLE_DAYS) + 1);
+}
+function stepCycle(d){
+  const max = currentCycle();
+  dash.cycle = Math.min(max, Math.max(1, (dash.cycle || max) + d));
+  renderDash();
+}
+function jumpCycle(n){
+  dash.mode = "cycle"; dash.cycle = n; renderDash();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function setDashMode(m){ dash.mode = m; renderDash(); }
+function setCycleStart(v){
+  if(!v) return;
+  db.cycleStart = v; save(); toast("Cycle start updated"); renderAll();
+}
+function toggleRecap(){ dash.recap = !dash.recap; renderDash(); }
+function dismissRecap(){ db.recapDismissed = todayStr(); dash.recap = false; save(); renderDash(); }
+
+/* ---------- stats ---------- */
+function stats(list){
+  const reached = STAGES.map((_,i) => list.filter(c => c.stage >= i).length);
+  const rate = reached[0] ? reached[LAST] / reached[0] : null;
+  let worst = null;
+  for(let i=1;i<STAGES.length;i++){
+    if(!reached[i-1]) continue;
+    const r = reached[i] / reached[i-1];
+    if(!worst || r < worst.r) worst = {i, r};
+  }
+  return {reached, rate, worst};
+}
+// average days from first reaching stage i to first reaching stage i+1
+function transitionTimes(list){
+  const sums = Array(LAST).fill(0), counts = Array(LAST).fill(0);
+  list.forEach(c => {
+    const d = {0: c.added};
+    [...c.history].sort((a,b)=>a.date.localeCompare(b.date)).forEach(h => {
+      if(d[h.stage] === undefined) d[h.stage] = h.date;
+    });
+    for(let i=0;i<LAST;i++){
+      if(d[i] && d[i+1]){
+        const days = daysBetween(d[i], d[i+1]);
+        if(days >= 0){ sums[i] += days; counts[i]++; }
+      }
+    }
+  });
+  return Array.from({length:LAST}, (_,i) => ({avg: counts[i] ? sums[i]/counts[i] : null, n: counts[i]}));
+}
+function weekStats(){
+  const from = addDays(todayStr(), -6);
+  let moved=0, launched=0, reach=0, added=0, stalled=0;
+  db.contacts.forEach(c => {
+    c.history.forEach(h => {
+      if(h.date >= from){ if(h.stage > h.from) moved++; if(h.stage === LAST) launched++; }
+    });
+    c.notes.forEach(n => { if(n.type === "reach" && n.date >= from) reach++; });
+    if(c.added >= from) added++;
+    if(c.stage < LAST && daysSince(c.lastContact) >= 30) stalled++;
+  });
+  return {from, moved, launched, reach, added, stalled, due: db.contacts.filter(isDue).length};
+}
+
+/* ---------- navigation ---------- */
+function show(v){
+  document.querySelectorAll(".view").forEach(s => s.classList.toggle("active", s.id === "view-"+v));
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("active", b.dataset.view === v));
+  document.getElementById("title").textContent = TITLES[v][0];
+  document.getElementById("subtitle").textContent = TITLES[v][1];
+  window.scrollTo({top:0,behavior:"instant"});
+  renderAll();
+}
+
+/* ---------- dashboard ---------- */
+function renderDash(){
+  const cs = db.contacts;
+  const maxCycle = currentCycle();
+  if(!dash.cycle || dash.cycle > maxCycle) dash.cycle = maxCycle;
+  const isCycle = dash.mode === "cycle";
+
+  document.querySelectorAll(".seg button").forEach(b => b.classList.toggle("on", b.dataset.mode === dash.mode));
+  document.getElementById("cycleNav").style.display = isCycle ? "" : "none";
+  document.getElementById("cmpCard").style.display = isCycle ? "" : "none";
+
+  // banners
+  const due = cs.filter(isDue).length;
+  document.getElementById("dueBanner").innerHTML = due
+    ? `<div class="banner" onclick="show('reminders')"><span>⏰ <b>${due}</b> contact${due>1?"s":""} due for a check-in</span><span>View →</span></div>`
+    : "";
+  const needBackup = cs.length && (!db.lastBackup || daysBetween(db.lastBackup, todayStr()) >= 7);
+  document.getElementById("backupBanner").innerHTML = needBackup
+    ? `<div class="banner info" onclick="exportData()"><span>💾 ${db.lastBackup ? `Last backup ${fmtDate(db.lastBackup)}` : "No backup yet"}</span><span>Save →</span></div>`
+    : "";
+
+  // weekly recap (Mondays until dismissed, or when opened by button)
+  const isMon = new Date().getDay() === 1;
+  const showRecap = dash.recap || (isMon && db.recapDismissed !== todayStr());
+  const rc = document.getElementById("recapCard");
+  if(showRecap){
+    const w = weekStats();
+    rc.style.display = "";
+    rc.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <h2 style="margin:0">${isMon ? "Monday recap" : "Weekly recap"}</h2>
+        <button class="ghost small" onclick="dismissRecap()">Dismiss</button>
+      </div>
+      <div class="meta">${fmtDate(w.from)} – ${fmtDate(todayStr())} · last 7 days</div>
+      <div class="recap">
+        <div class="fact"><div class="k">Moved forward</div><div class="v">${w.moved}</div></div>
+        <div class="fact"><div class="k">Launched</div><div class="v">${w.launched}</div></div>
+        <div class="fact"><div class="k">New contacts</div><div class="v">${w.added}</div></div>
+        <div class="fact"><div class="k">Reach-outs</div><div class="v">${w.reach}</div></div>
+        <div class="fact"><div class="k">Due now</div><div class="v">${w.due}</div></div>
+        <div class="fact"><div class="k">30+ days quiet</div><div class="v">${w.stalled}</div></div>
+      </div>
+      <div class="hint">${w.due ? `Start with the ${w.due} contact${w.due>1?"s":""} due in Reminders.` : "Nobody is overdue. Good week to look for new contacts."}</div>`;
+  } else {
+    rc.style.display = "none";
+    rc.innerHTML = "";
+  }
+
+  // scope
+  let scope = cs, prevScope = null;
+  if(isCycle){
+    const n = dash.cycle;
+    const [s,e] = cycleRange(n);
+    scope = cs.filter(c => cycleOf(c) === n);
+    prevScope = n > 1 ? cs.filter(c => cycleOf(c) === n-1) : null;
+    document.getElementById("cycleTitle").textContent = `Cycle ${n} of ${maxCycle}`;
+    document.getElementById("cycleDates").textContent = `${fmtDate(s)} – ${fmtDate(e)}${n===maxCycle?" · current":""}`;
+    document.getElementById("cycleStart").value = cycleStart();
+    document.getElementById("cycPrev").disabled = n <= 1;
+    document.getElementById("cycNext").disabled = n >= maxCycle;
+    document.getElementById("funnelTitle").textContent = `Funnel · Cycle ${n}`;
+  } else {
+    document.getElementById("funnelTitle").textContent = "Pipeline funnel · All time";
+  }
+
+  const st = stats(scope);
+  const launched = scope.filter(c => c.stage === LAST).length;
+  const active = scope.filter(c => c.stage < LAST).length;
+  const rateTxt = st.rate === null ? "—" : Math.round(st.rate*100) + "%";
+  const label = isCycle ? `in cycle ${dash.cycle}` : "all time";
+
+  document.getElementById("kpis").innerHTML = `
+    <div class="card kpi acc"><div class="n">${scope.length}</div><div class="l">Contacts · ${label}</div></div>
+    <div class="card kpi"><div class="n">${active}</div><div class="l">In pipeline</div></div>
+    <div class="card kpi good"><div class="n">${launched}</div><div class="l">Launched</div></div>
+    <div class="card kpi warn"><div class="n">${rateTxt}</div><div class="l">Convo → Launch</div></div>`;
+
+  // goals: always the current cycle
+  const curN = currentCycle();
+  const curList = cs.filter(c => cycleOf(c) === curN);
+  const cur = stats(curList);
+  document.getElementById("goalTitle").textContent = `Goals · Cycle ${curN}`;
+  document.getElementById("goalRows").innerHTML = STAGES.map((name,i) => {
+    const goal = db.goals[i] || 0, r = cur.reached[i];
+    const pct = goal ? Math.min(100, Math.round(r/goal*100)) : 0;
+    return `<div class="goalrow">
+      <div class="funnel-label">${name}</div>
+      <div class="bar"><div class="fill ${goal && r>=goal ? "over" : ""}" style="width:${pct}%"></div></div>
+      <div class="count">${r} / ${goal}</div>
+    </div>`;
+  }).join("");
+
+  // funnel with conversion targets
+  const max = Math.max(1, st.reached[0]);
+  document.getElementById("funnel").innerHTML = STAGES.map((name,i) => {
+    const pct = Math.round(st.reached[i] / max * 100);
+    let chip;
+    if(i === 0) chip = `<div class="chip na">start</div>`;
+    else if(!st.reached[i-1]) chip = `<div class="chip na">—</div>`;
+    else {
+      const r = Math.round(st.reached[i] / st.reached[i-1] * 100);
+      const t = db.targets[i-1];
+      const cls = r >= t ? "good" : "bad";
+      chip = `<div class="chip ${cls}">${r}%<small>goal ${t}%</small></div>`;
+    }
+    return `<div class="funnel-row">
+      <div class="funnel-label">${name}</div>
+      <div class="bar"><div class="fill" style="width:${pct}%"></div></div>
+      <div class="count">${st.reached[i]}</div>
+      ${chip}
+    </div>`;
+  }).join("");
+
+  // time per stage
+  const tt = transitionTimes(scope);
+  const maxAvg = Math.max(1, ...tt.map(t => t.avg || 0));
+  let slow = -1;
+  tt.forEach((t,i) => { if(t.avg !== null && (slow === -1 || t.avg > tt[slow].avg)) slow = i; });
+  document.getElementById("timeRows").innerHTML = tt.some(t => t.avg !== null)
+    ? tt.map((t,i) => `<div class="tt ${i===slow?"slow":""}">
+        <div class="funnel-label">${STAGES[i]} → ${STAGES[i+1]}</div>
+        <div class="bar"><div class="fill" style="width:${t.avg===null?0:Math.round(t.avg/maxAvg*100)}%"></div></div>
+        <div class="count">${t.avg===null?"—":t.avg.toFixed(1)+"d"}<small>${t.n} contact${t.n===1?"":"s"}</small></div>
+      </div>`).join("")
+    : `<div class="empty">Not enough stage history yet. This fills in as contacts move forward.</div>`;
+
+  // insights
+  let txt;
+  if(!scope.length){
+    txt = isCycle ? `No contacts were added in cycle ${dash.cycle}.` : "Add your first contact to start seeing ratios.";
+  } else if(!st.worst){
+    txt = "Not enough data yet to find a drop-off.";
+  } else {
+    const from = STAGES[st.worst.i-1], to = STAGES[st.worst.i];
+    txt = `Biggest drop-off is <b>${from} → ${to}</b>, where only <b>${Math.round(st.worst.r*100)}%</b> move forward. ` +
+          `<b>${scope.filter(c=>c.stage===0).length}</b> contacts are still at Convo.`;
+  }
+  if(isCycle && prevScope && prevScope.length && scope.length){
+    const prev = stats(prevScope);
+    if(prev.rate !== null && st.rate !== null){
+      const diff = Math.round((st.rate - prev.rate) * 100);
+      const dir = diff > 0 ? `up <b>${diff} pts</b>` : diff < 0 ? `down <b>${Math.abs(diff)} pts</b>` : "flat";
+      txt += `<br><br>Convo → Launch is ${dir} from cycle ${dash.cycle-1} (${Math.round(prev.rate*100)}% → ${Math.round(st.rate*100)}%).`;
+    }
+  }
+  document.getElementById("insights").innerHTML = txt;
+
+  if(isCycle){
+    const rows = [];
+    for(let n=1; n<=maxCycle; n++){
+      const list = cs.filter(c => cycleOf(c) === n);
+      const s = stats(list);
+      const [a,b] = cycleRange(n);
+      const pct = s.rate === null ? 0 : Math.round(s.rate*100);
+      rows.push(`<div class="cmp ${n===dash.cycle?"cur":""}" onclick="jumpCycle(${n})">
+        <div class="lbl">Cycle ${n}<small>${fmtDate(a)} – ${fmtDate(b)}</small><small>${list.length} added</small></div>
+        <div class="bar"><div class="fill" style="width:${pct}%"></div></div>
+        <div class="val">${s.rate===null?"—":pct+"%"}</div>
+      </div>`);
+    }
+    document.getElementById("cmpList").innerHTML = rows.reverse().join("");
+  }
+
+  const acts = [];
+  scope.forEach(c => c.notes.forEach(n => acts.push({...n, name:c.name})));
+  acts.sort((a,b) => (b.date+(b.ts||"")).localeCompare(a.date+(a.ts||"")));
+  document.getElementById("activity").innerHTML = acts.length
+    ? acts.slice(0,6).map(a => `<div class="note"><div class="d">${fmtDate(a.date)} · ${esc(a.name)}</div>${esc(a.text)}</div>`).join("")
+    : `<div class="empty">No activity yet</div>`;
+}
+
+/* ---------- goals ---------- */
+function initGoalForm(){
+  document.getElementById("goalInputs").innerHTML = STAGES.map((s,i) =>
+    `<div><label>${s}</label><input type="number" min="0" id="g-${i}" value="${db.goals[i]}"></div>`).join("");
+  document.getElementById("targetInputs").innerHTML = STAGES.slice(0,-1).map((s,i) =>
+    `<div><label>${s} → ${STAGES[i+1]}</label><input type="number" min="0" max="100" id="t-${i}" value="${db.targets[i]}"></div>`).join("");
+}
+function saveGoals(){
+  for(let i=0;i<STAGES.length;i++){
+    const v = parseInt(document.getElementById("g-"+i).value,10);
+    if(!isNaN(v) && v >= 0) db.goals[i] = v;
+  }
+  for(let i=0;i<LAST;i++){
+    const v = parseInt(document.getElementById("t-"+i).value,10);
+    if(!isNaN(v) && v >= 0) db.targets[i] = v;
+  }
+  save(); toast("Goals saved"); renderAll();
+}
+
+/* ---------- add ---------- */
+function stageOptions(sel){
+  return STAGES.map((s,i)=>`<option value="${i}" ${i===sel?"selected":""}>${s}</option>`).join("");
+}
+function initForm(){
+  document.getElementById("f-stage").innerHTML = stageOptions(0);
+  document.getElementById("f-added").value = todayStr();
+  document.getElementById("fStage").innerHTML = `<option value="">All stages</option>` +
+    STAGES.map((s,i)=>`<option value="${i}">${s}</option>`).join("");
+}
+function addContact(e){
+  e.preventDefault();
+  const name = document.getElementById("f-name").value.trim();
+  if(!name) return;
+  const added = document.getElementById("f-added").value || todayStr();
+  const note = document.getElementById("f-note").value.trim();
+  const stage = parseInt(document.getElementById("f-stage").value,10) || 0;
+  const c = normalize({
+    id: uid(), name,
+    company: document.getElementById("f-company").value.trim(),
+    phone: document.getElementById("f-phone").value.trim(),
+    email: document.getElementById("f-email").value.trim(),
+    stage, added, lastContact: added, notes: [], history: [],
+    maxStage: stage, maxStageDate: added
+  });
+  if(note) c.notes.push({type:"note", date: todayStr(), ts: new Date().toISOString(), text: note});
+  db.contacts.unshift(c);
+  save();
+  e.target.reset();
+  initForm();
+  toast("Contact added");
+  show("contacts");
+}
+
+/* ---------- contact actions ---------- */
+function moveStage(id, newStage){
+  const c = db.contacts.find(x=>x.id===id); if(!c) return;
+  const old = c.stage;
+  const target = Math.max(0, Math.min(LAST, newStage));
+  if(target === old) return;
+  const prevMax = c.maxStage ?? old;
+  c.stage = target;
+  if(c.stage > prevMax){ c.maxStage = c.stage; c.maxStageDate = todayStr(); }
+  else c.maxStage = prevMax;
+  c.lastContact = todayStr();
+  c.history.push({stage: c.stage, from: old, date: todayStr(), ts: new Date().toISOString()});
+  c.notes.push({type:"move", date: todayStr(), ts: new Date().toISOString(), text: `Moved to ${STAGES[c.stage]}`});
+  save(); toast(`Now at ${STAGES[c.stage]}`); renderAll();
+}
+function setStageFromSelect(id, val){ moveStage(id, parseInt(val,10)); }
+function addNote(id){
+  const c = db.contacts.find(x=>x.id===id); if(!c) return;
+  const box = document.getElementById("note-"+id);
+  const text = box.value.trim(); if(!text) return;
+  c.notes.push({type:"note", date: todayStr(), ts: new Date().toISOString(), text});
+  save(); toast("Note saved"); renderAll();
+}
+function logReach(id, label){
+  const c = db.contacts.find(x=>x.id===id); if(!c) return;
+  c.lastContact = todayStr();
+  c.notes.push({type:"reach", date: todayStr(), ts: new Date().toISOString(), text: label || "Reached out"});
+  save(); toast("Reach-out logged"); renderAll();
+}
+function deleteContact(id){
+  const c = db.contacts.find(x=>x.id===id);
+  if(!c || !confirm(`Delete ${c.name}? This can't be undone.`)) return;
+  db.contacts = db.contacts.filter(x=>x.id!==id);
+  if(expandedId===id) expandedId = null;
+  save(); toast("Deleted"); renderAll();
+}
+function toggleExpand(id){ expandedId = expandedId===id ? null : id; renderContacts(); }
+
+/* ---------- contacts page ---------- */
+const SORTS = {
+  recent:   (a,b) => (b.lastContact||"").localeCompare(a.lastContact||""),
+  stale:    (a,b) => daysSince(b.lastContact) - daysSince(a.lastContact),
+  furthest: (a,b) => (b.maxStage - a.maxStage) || (a.name.localeCompare(b.name)),
+  added:    (a,b) => (b.added||"").localeCompare(a.added||""),
+  name:     (a,b) => a.name.localeCompare(b.name)
+};
+function contactCard(c){
+  const open = expandedId === c.id;
+  const cur = c.stage, max = c.maxStage;
+  const track = `<div class="tk">${STAGES.map((s,i)=>`<span class="${i<=max?"on":""} ${i===cur?"cur":""}" title="${s}"></span>`).join("")}</div>`;
+  const pillCls = cur === LAST ? "good" : (isDue(c) ? "bad" : "");
+  const facts = `<div class="facts">
+    <div class="fact"><div class="k">Furthest</div><div class="v">${STAGES[max]}</div><div class="s">${fmtDate(c.maxStageDate)}</div></div>
+    <div class="fact"><div class="k">Last contact</div><div class="v">${fmtDate(c.lastContact)}</div><div class="s">${daysSince(c.lastContact)}d ago</div></div>
+    <div class="fact"><div class="k">Added</div><div class="v">${fmtDate(c.added)}</div><div class="s">Cycle ${cycleOf(c)}</div></div>
+  </div>`;
+  const detail = open ? `
+    <div style="margin-top:12px">
+      <div class="meta">${esc(c.phone||"")}${c.phone&&c.email?" · ":""}${esc(c.email||"")}</div>
+      <label>Current stage</label>
+      <select onchange="setStageFromSelect('${c.id}', this.value)">${stageOptions(c.stage)}</select>
+      <div class="btns">
+        <button class="ghost small" onclick="moveStage('${c.id}', ${c.stage-1})" ${c.stage===0?"disabled":""}>◀ Back</button>
+        <button class="small good" onclick="moveStage('${c.id}', ${c.stage+1})" ${c.stage===LAST?"disabled":""}>Advance ▶</button>
+        <button class="ghost small" onclick="logReach('${c.id}')">Log reach-out</button>
+      </div>
+      <label>Add a note</label>
+      <textarea id="note-${c.id}" placeholder="What happened, what they said next…"></textarea>
+      <div class="btns"><button class="small" onclick="addNote('${c.id}')">Save note</button></div>
+      <div class="notes">
+        ${c.notes.length ? [...c.notes].reverse().map(n=>`<div class="note"><div class="d">${fmtDate(n.date)}</div>${esc(n.text)}</div>`).join("") : `<div class="meta">No notes yet</div>`}
+      </div>
+      <div class="btns"><button class="danger small" onclick="deleteContact('${c.id}')">Delete contact</button></div>
+    </div>` : "";
+  return `<div class="item" onclick="${open?"":`toggleExpand('${c.id}')`}" style="cursor:${open?"default":"pointer"}">
+    <div class="item-head">
+      <div style="min-width:0">
+        <div class="name">${esc(c.name)}</div>
+        <div class="meta">${esc(c.company||"No company")} · ${c.notes.length} note${c.notes.length===1?"":"s"}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+        <span class="pill ${pillCls}">${STAGES[cur]}</span>
+        ${open?`<button class="ghost small" onclick="event.stopPropagation();toggleExpand('${c.id}')">Close</button>`:""}
+      </div>
+    </div>
+    ${track}
+    <div class="meta" style="margin-top:6px;font-size:11.5px">Reached ${max+1} of ${STAGES.length} stages</div>
+    ${facts}
+    ${detail}
+  </div>`;
+}
+function renderContacts(){
+  const q = (document.getElementById("search").value||"").trim().toLowerCase();
+  const stageF = document.getElementById("fStage").value;
+  const sortF = document.getElementById("fSort").value;
+  let list = db.contacts.filter(c =>
+    (stageF === "" || String(c.stage) === stageF) &&
+    (!q || [c.name,c.company,c.email,c.phone,STAGES[c.stage],STAGES[c.maxStage],
+      ...c.notes.map(n=>n.text)].join(" ").toLowerCase().includes(q)));
+  list.sort(SORTS[sortF] || SORTS.recent);
+  document.getElementById("contactCount").textContent =
+    `${list.length} of ${db.contacts.length} contact${db.contacts.length===1?"":"s"}`;
+  document.getElementById("contactList").innerHTML = list.length
+    ? list.map(contactCard).join("")
+    : `<div class="card empty">${db.contacts.length?"No contacts match those filters.":"No contacts yet. Use Add to create one."}</div>`;
+}
+function exportCSV(){
+  const cols = ["Name","Company","Phone","Email","Current Stage","Furthest Stage","Furthest Date","Date Added","Cycle","Last Contact","Notes"];
+  const rows = db.contacts.map(c => [c.name,c.company,c.phone,c.email,STAGES[c.stage],STAGES[c.maxStage],
+    c.maxStageDate||"",c.added||"",cycleOf(c),c.lastContact||"",c.notes.length]);
+  const csv = [cols,...rows].map(r => r.map(v => `"${String(v??"").replace(/"/g,'""')}"`).join(",")).join("\n");
+  download(new Blob([csv],{type:"text/csv"}), `trackstar-contacts-${todayStr()}.csv`);
+  toast("CSV exported");
+}
+
+/* ---------- reminders ---------- */
+function setInterval_(){
+  const v = parseInt(document.getElementById("interval").value,10);
+  if(v>0){ db.interval = v; save(); toast(`Reminder set to ${v} days`); renderAll(); }
+}
+function renderReminders(){
+  document.getElementById("interval").value = db.interval;
+  const due = db.contacts.filter(isDue).sort((a,b)=>daysSince(b.lastContact)-daysSince(a.lastContact));
+  const soon = db.contacts.filter(isSoon).sort((a,b)=>daysSince(b.lastContact)-daysSince(a.lastContact));
+
+  const card = (c, isDueCard) => {
+    const d = daysSince(c.lastContact);
+    const pillCls = isDueCard ? "bad" : "warn";
+    const label = isDueCard
+      ? (d === db.interval ? "due today" : `${d - db.interval}d overdue`)
+      : `due in ${db.interval - d}d`;
+    return `<div class="item">
+      <div class="item-head">
+        <div style="min-width:0">
+          <div class="name">${esc(c.name)}</div>
+          <div class="meta">${esc(c.company||"")}${c.company?" · ":""}${STAGES[c.stage]}</div>
+          <div class="meta">Last contact ${fmtDate(c.lastContact)} (${d}d ago)</div>
+        </div>
+        <span class="pill ${pillCls}">${label}</span>
+      </div>
+      <div class="btns">
+        <button class="small good" onclick="logReach('${c.id}','${isDueCard?"Check-in reminder":"Early check-in"}')">Reached out</button>
+        <button class="ghost small" onclick="expandedId='${c.id}';show('contacts')">Open</button>
+      </div>
+    </div>`;
+  };
+  document.getElementById("dueList").innerHTML = due.length
+    ? due.map(c=>card(c,true)).join("")
+    : `<div class="empty">Nobody is due right now. Nice work.</div>`;
+  document.getElementById("soonList").innerHTML = soon.length
+    ? soon.map(c=>card(c,false)).join("")
+    : `<div class="empty">Nothing coming up in the next two weeks.</div>`;
+  document.getElementById("backupInfo").textContent = db.lastBackup
+    ? `Last backup: ${fmtDate(db.lastBackup)}`
+    : "No backup saved yet.";
+}
+
+/* ---------- backup ---------- */
+async function exportData(){
+  const name = `trackstar-backup-${todayStr()}.json`;
+  const file = new File([JSON.stringify(db,null,2)], name, {type:"application/json"});
+  try{
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], title:"Trackstar backup"});
+    } else {
+      download(file, name);
+    }
+    db.lastBackup = todayStr(); save();
+    toast("Backup saved");
+    renderAll();
+  }catch(e){
+    if(e && e.name === "AbortError") return; // user cancelled the share sheet
+    toast("Backup failed. Try again.");
+  }
+}
+function importData(ev){
+  const f = ev.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try{
+      const d = JSON.parse(r.result);
+      if(!d || !Array.isArray(d.contacts)) throw new Error("bad");
+      if(!confirm(`Replace current data with ${d.contacts.length} contacts from the backup?`)) return;
+      db = withDefaults({contacts:d.contacts, interval:d.interval, cycleStart:d.cycleStart,
+                         targets:d.targets, goals:d.goals, lastBackup:d.lastBackup});
+      save(); initGoalForm(); toast("Data imported"); renderAll();
+    }catch(e){ alert("That file isn't a valid backup."); }
+  };
+  r.readAsText(f);
+  ev.target.value = "";
+}
+
+/* ---------- boot ---------- */
+function renderAll(){
+  const active = document.querySelector(".view.active").id.replace("view-","");
+  if(active==="dash") renderDash();
+  if(active==="contacts") renderContacts();
+  if(active==="reminders") renderReminders();
+  const n = db.contacts.filter(isDue).length;
+  const b = document.querySelector('nav button[data-view="reminders"]');
+  b.innerHTML = `<span class="ic">⏰</span>Reminders${n?` <span style="color:#fde68a">(${n})</span>`:""}`;
+}
+if(navigator.storage && navigator.storage.persist){
+  navigator.storage.persist().catch(()=>{}); // ask Safari to keep this data
+}
+startFromSheet();
+</script>
+</body>
+</html>
