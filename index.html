@@ -196,7 +196,7 @@ nav button.active{color:var(--text);background:rgba(110,168,255,.14)}
 <body>
 
 <header style="position:relative">
-  <div style="position:absolute;top:16px;right:16px;text-align:right">
+  <div style="position:absolute;top:calc(12px + env(safe-area-inset-top));right:16px;text-align:right">
     <button class="small good" onclick="exportData()" style="padding:7px 12px;font-size:13px">Save backup</button>
     <div class="meta" id="lastBackupText" style="font-size:10px;margin-top:4px;max-width:140px"></div>
   </div>
@@ -435,7 +435,7 @@ nav button.active{color:var(--text);background:rgba(110,168,255,.14)}
       <div class="hint" id="backupInfo"></div>
       <div class="hint">Backups are plain-text files (JSON). Anyone you send a backup to will see your contacts, so only share it on purpose.</div>
     </div>
-    <div class="hint" style="text-align:center;margin-top:18px">Trackstar v30 · Your data stays on this device</div>
+    <div class="hint" style="text-align:center;margin-top:18px">Trackstar v31 · Your data stays on this device</div>
   </section>
 
   <!-- DAILY MESSAGE -->
